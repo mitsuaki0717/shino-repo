@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>サンプルサイト</title>
+        <!-- BootstrapのCSS読み込み -->
+        <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+        <!-- jQuery読み込み -->
+        <script src="jquery-3.2.1.min.js"></script>
+        <!-- BootstrapのJS読み込み -->
+        <script src="bootstrap/js/bootstrap.min.js"></script>
+        <!-- Google mapを埋め込むためのjQueryプラグイン設定 -->
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+        <script type="text/javascript" src="http://www.google.fr/jsapi"></script>
+        <script type="text/javascript">
+            google.load("maps", "3.4", {
+            other_params: "sensor=false&language=ja"
+            });
+        </script>
+        <script type="text/javascript" src="Tilotiti-jQuery-Google-Map/jquery.googlemap.js"></script>
+    </head>
+    <?php
+        $dsn = 'mysql:host=localhost;dbname=test_db;charset=utf8';
+        $user = 'user01';
+        $password = 'P@ssw0rd';
+    ?>
+    <body>
+        <!-- テーブルを全量表示 -->
+        <div class="container">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>NO</th>
+                        <th>名前</th>
+                        <th>かな</th>
+                        <th>会社名</th>
+                        <th>日付</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <?php
+                            try{
+                                $pdo = new PDO($dsn, $user, $password);
+                                print('接続に成功しました。<br>');
+                                $pdo->query('SET NAMES utf8');
+                                $sql = 'SELECT * FROM test_table';
+                                foreach ($pdo->query($sql) as $row) {
+                        ?>
+                            <tr>
+                                <th scope="row">
+                                    <?php print ($row['NO']); ?>
+                                </th>
+                                <td>
+                                    <?php print($row['NAME']); ?>
+                                </td>
+                                <td>
+                                    <?php print($row['kana']); ?>
+                                </td>
+                                <td>
+                                    <?php print($row['company']); ?>
+                                </td>
+                                <td>
+                                    <?php print($row['DATE']); ?>
+                                </td>
+                            </tr>
+                        <?php
+                                }
+                            }catch (PDOException $e){
+                                print('Error:'.$e->getMessage());
+                                die();
+                            }
+                            $pdo = null;
+                        ?>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <form>
+            <!-- プルダウンの項目をテーブルの項目から表示 -->
+            <div class="form-group">
+                <label for="exampleInputEmail1">選択</label>
+                <select name="example">
+                    <?php
+                        try{
+                            $pdo = new PDO($dsn, $user, $password);
+                            print('接続に成功しました。<br>');
+                            $pdo->query('SET NAMES utf8');
+                            $sql = 'SELECT NAME FROM test_table';
+                            foreach ($pdo->query($sql) as $row) {
+                    ?>
+                    <option><?php print($row['NAME']); ?></option>
+                    <?php
+                            }
+                        }catch (PDOException $e){
+                            print('Error:'.$e->getMessage());
+                            die();
+                        }
+                        $pdo = null;
+                    ?>
+                </select>
+            </div>
+        </form>
+            <!-- テキストボックスに日付を入力(初期値を当日日付に) -->
+            <div class="form-group">
+                <label for="date">日付</label>
+                <input type="text" class="form-control" id="date" value="<?php echo date("Y/m/d"); ?>" ">
+            </div>
+            <!-- 条件を選択して表示 -->
+            <div class="form-group">
+                <form action="http:../test2.php" method="get">
+                    <select name="name">
+                        <?php
+                            try{
+                                $pdo = new PDO($dsn, $user, $password);
+                                print('接続に成功しました。<br>');
+                                $pdo->query('SET NAMES utf8');
+                                $sql = 'SELECT NAME FROM test_table';
+                                foreach ($pdo->query($sql) as $row) {
+                        ?>
+                        <option><?php print($row['NAME']); ?></option>
+                        <?php
+                                }
+                            }catch (PDOException $e){
+                                print('Error:'.$e->getMessage());
+                                die();
+                            }
+                            $pdo = null;
+                        ?>
+                    </select>
+                    <p>
+                        <input class="btn btn-primary" type="submit" value="送信">
+                    </p>
+                </form>
+            </div>
+            <!-- google map -->
+            <div id="map" style="width: 800px; height: 300px;">
+                <script type="text/javascript">
+                    $(function() {
+                        $("#map").googleMap({
+                            zoom: 15,
+                        });
+                        $("#map").addMarker({
+                            coords: [33.968881,133.288897],
+                        });
+                    })
+                </script>
+            </div>
+            <!-- 入力フォーム -->
+            <div class="layerTransparent">
+                <center>
+                    <h3>入力フォーム</h3></br>
+                    <form method="get" action="../add.php">
+                        名　前:<input method="get" type="text" name="name" required></br>
+                        か　な:<input method="get" type="text" name="kana" required></br>
+                        会社名:<input method="get" type="text" name="company" required></br>
+                        日　付:<input method="get" type="date" name="day" required>
+                        <!-- 日　付:<input method="get" type="text" name="day" required value="<?php echo date("Y-m-d"); ?>"></br> -->
+                        <p>
+                        <input class="btn btn-primary" type="submit" value="送信">
+                        </p>
+                    </form>
+                </center>   
+            </div>
+            <INPUT type="hidden">
+            <div class="form-group">
+                <label for="exampleInputFile">内容</label>
+                <input type="file" id="exampleInputFile">
+                <p class="help-block">Example block-level help text here.</p>
+            </div>
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox"> Check me out
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </body>
+</html>
+
