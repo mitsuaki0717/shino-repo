@@ -1,0 +1,254 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Create AWS CloudFormation Customize Virtual Private Cloud'
+Resources:
+    # VPCの作成
+    myVPC:
+        Type: AWS::EC2::VPC
+        Properties: 
+            CidrBlock: 10.0.0.0/16
+            EnableDnsSupport: true
+            EnableDnsHostnames: true
+            InstanceTenancy: default
+            Tags:
+            - Key: Name
+              Value: handson-vpc
+    # インターネットゲートウェイ作成
+    myInternetGateway:
+        Type: AWS::EC2::InternetGateway
+        Properties:
+            Tags:
+            - Key: Name
+              Value: InternetGW
+    # インターネットゲートウェイのアタッチ
+    AttachGateway:
+        Type: AWS::EC2::VPCGatewayAttachment
+        Properties:
+            VpcId:
+              Ref: myVPC
+            InternetGatewayId:
+              Ref: myInternetGateway
+    #ルートテーブルの作成
+    myRouteTable:
+        Type: AWS::EC2::RouteTable
+        Properties:
+            VpcId:
+              Ref: myVPC
+            Tags:
+            - Key: foo
+              Value: bar
+    #ルートテーブルにルーティングの設定を追加
+    myRoute:
+        Type: AWS::EC2::Route
+        Properties:
+            RouteTableId:
+              Ref: myRouteTable
+            DestinationCidrBlock: 0.0.0.0/0
+            GatewayId:
+              Ref: myInternetGateway
+    # サブネットの作成
+    SubnetPublic1a:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId:
+              Ref: myVPC
+            CidrBlock: 10.0.0.0/24
+            AvailabilityZone: "ap-northeast-1a"
+            MapPublicIpOnLaunch: true
+            Tags:
+            - Key: Name
+              Value: SubnetPublic1a
+    SubnetPublic1c:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId:
+              Ref: myVPC
+            AvailabilityZone: "ap-northeast-1c"
+            CidrBlock: 10.0.1.0/24
+            MapPublicIpOnLaunch: true
+            Tags:
+            - Key: Name
+              Value: SubnetPublic1c
+    SubnetPrivate1a:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId:
+              Ref: myVPC
+            AvailabilityZone: "ap-northeast-1a"
+            CidrBlock: 10.0.2.0/24
+            MapPublicIpOnLaunch: false
+            Tags: 
+            - Key: Name
+              Value: SubnetPrivate1a
+    SubnetPrivate1c:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId:
+              Ref: myVPC
+            AvailabilityZone: "ap-northeast-1c"
+            CidrBlock: 10.0.3.0/24
+            MapPublicIpOnLaunch: false
+            Tags:
+            - Key: Name
+              Value: SubnetPrivate1c
+    # ルートテーブルをサブネットに設定
+    myPublicARouteTableAssociation:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId:
+              Ref: SubnetPublic1a
+            RouteTableId:
+              Ref: myRouteTable
+    myPublicCRouteTableAssociation:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId:
+              Ref: SubnetPublic1c
+            RouteTableId:
+              Ref: myRouteTable
+    # セキュリティグループの作成
+    webSecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            VpcId:
+              Ref: myVPC
+            GroupDescription: "Enable SSH access via port 22"
+            SecurityGroupIngress:
+            - IpProtocol: tcp
+              FromPort: 22
+              ToPort: 22
+              CidrIp: 0.0.0.0/0
+            - IpProtocol: tcp
+              FromPort: 80
+              ToPort: 80
+              CidrIp: 0.0.0.0/0
+            Tags:
+            - Key: Name
+              Value: web-SecurityGroup
+    webSecurityGroup2:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            VpcId:
+              Ref: myVPC
+            GroupDescription: "Enable HTTP access via port 80"
+            SecurityGroupIngress:
+            - IpProtocol: tcp
+              FromPort: 80
+              ToPort: 80
+              CidrIp: 0.0.0.0/0
+            Tags:
+            - Key: Name
+              Value: web-SecurityGroup2
+    # EC2インスタンスの作成
+    WebInstance01:
+        Type: AWS::EC2::Instance
+        Properties:
+            ImageId: "ami-867b03e0"
+            # シャットダウン時の動作
+            InstanceInitiatedShutdownBehavior: stop
+            AvailabilityZone: "ap-northeast-1a"
+            # インスタンスタイプ
+            InstanceType: t2.micro
+            # キーペア
+            KeyName: test-key
+            # 詳細モニタリング設定
+            Monitoring: false
+            NetworkInterfaces:
+             -  AssociatePublicIpAddress: true
+                DeviceIndex: 0
+                GroupSet:
+                  - Ref: webSecurityGroup
+                SubnetId:
+                  Ref: SubnetPublic1a
+            # タグ
+            Tags:
+            - Key: Name
+              Value: Testweb01
+            UserData:
+                Fn::Base64:
+                  !Sub |
+                    #!/bin/bash -ex
+                    sudo systemctl start httpd
+                    sudo systemctl start mariadb
+    WebInstance02:
+        Type: AWS::EC2::Instance
+        Properties:
+            ImageId: "ami-867b03e0"
+            InstanceInitiatedShutdownBehavior: stop
+            AvailabilityZone: "ap-northeast-1c"
+            InstanceType: t2.micro
+            KeyName: test-key
+            Monitoring: false
+            NetworkInterfaces:
+              - AssociatePublicIpAddress: "true"
+                DeviceIndex: "0"
+                GroupSet:
+                  - Ref: "webSecurityGroup"
+                SubnetId:
+                  Ref: "SubnetPublic1c"
+            Tags:
+            - Key: Name
+              Value: Testweb02
+            UserData:
+                Fn::Base64:
+                  !Sub |
+                    #!/bin/bash -ex
+                    sudo systemctl start httpd
+                    sudo systemctl start mariadb
+    testEIP:
+        Type: AWS::EC2::EIP
+        Properties:
+            InstanceId:
+              Ref: WebInstance01
+            Domain: myVPC
+    TargetGroup:
+        Type: AWS::ElasticLoadBalancingV2::TargetGroup
+        Properties:
+            HealthCheckIntervalSeconds: 30
+            HealthCheckProtocol: HTTP
+            HealthCheckTimeoutSeconds: 10
+            HealthyThresholdCount: 4
+            Matcher:
+                HttpCode: 200
+            Name: MyTargets
+            Port: 80
+            Protocol: HTTP
+            TargetGroupAttributes:
+              - Key: deregistration_delay.timeout_seconds
+                Value: 20
+            Targets:
+              - Id:
+                  Ref: WebInstance01
+                Port: 80
+              - Id:
+                  Ref: WebInstance02
+                Port: 80
+            UnhealthyThresholdCount: 3
+            VpcId:
+              Ref: myVPC
+            Tags:
+              - Key: key1
+                Value: value1
+              - Key: key2
+                Value: value2
+    ElasticLoadBalancer:
+        Type: AWS::ElasticLoadBalancing::LoadBalancer
+        Properties:
+            Instances:
+              - Ref: WebInstance01
+              - Ref: WebInstance02
+            Subnets:
+              - Ref: SubnetPublic1a
+              - Ref: SubnetPublic1c
+            SecurityGroups:
+              - Ref: webSecurityGroup2
+            Listeners:
+              - LoadBalancerPort: 80
+                InstancePort: 80
+                Protocol: HTTP
+            HealthCheck:
+                Target: "HTTP:80/phpinfo.php"
+                HealthyThreshold: 3
+                UnhealthyThreshold: 5
+                Interval: 10
+                Timeout: 5
+
