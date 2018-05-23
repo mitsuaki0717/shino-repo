@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: 'Create AWS CloudFormation Customize Virtual Private Cloud'
 Resources:
-    # VPC‚Ìì¬
+    # VPCã®ä½œæˆ
     myVPC:
         Type: AWS::EC2::VPC
         Properties: 
@@ -12,14 +12,14 @@ Resources:
             Tags:
             - Key: Name
               Value: handson-vpc
-    # ƒCƒ“ƒ^[ƒlƒbƒgƒQ[ƒgƒEƒFƒCì¬
+    # ã‚¤ãƒ³ã‚¿ãƒ¼ãƒãƒƒãƒˆã‚²ãƒ¼ãƒˆã‚¦ã‚§ã‚¤ä½œæˆ
     myInternetGateway:
         Type: AWS::EC2::InternetGateway
         Properties:
             Tags:
             - Key: Name
               Value: InternetGW
-    # ƒCƒ“ƒ^[ƒlƒbƒgƒQ[ƒgƒEƒFƒC‚ÌƒAƒ^ƒbƒ`
+    # ã‚¤ãƒ³ã‚¿ãƒ¼ãƒãƒƒãƒˆã‚²ãƒ¼ãƒˆã‚¦ã‚§ã‚¤ã®ã‚¢ã‚¿ãƒƒãƒ
     AttachGateway:
         Type: AWS::EC2::VPCGatewayAttachment
         Properties:
@@ -27,7 +27,7 @@ Resources:
               Ref: myVPC
             InternetGatewayId:
               Ref: myInternetGateway
-    #ƒ‹[ƒgƒe[ƒuƒ‹‚Ìì¬
+    #ãƒ«ãƒ¼ãƒˆãƒ†ãƒ¼ãƒ–ãƒ«ã®ä½œæˆ
     myRouteTable:
         Type: AWS::EC2::RouteTable
         Properties:
@@ -36,7 +36,7 @@ Resources:
             Tags:
             - Key: foo
               Value: bar
-    #ƒ‹[ƒgƒe[ƒuƒ‹‚Éƒ‹[ƒeƒBƒ“ƒO‚Ìİ’è‚ğ’Ç‰Á
+    #ãƒ«ãƒ¼ãƒˆãƒ†ãƒ¼ãƒ–ãƒ«ã«ãƒ«ãƒ¼ãƒ†ã‚£ãƒ³ã‚°ã®è¨­å®šã‚’è¿½åŠ 
     myRoute:
         Type: AWS::EC2::Route
         Properties:
@@ -45,7 +45,7 @@ Resources:
             DestinationCidrBlock: 0.0.0.0/0
             GatewayId:
               Ref: myInternetGateway
-    # ƒTƒuƒlƒbƒg‚Ìì¬
+    # ã‚µãƒ–ãƒãƒƒãƒˆã®ä½œæˆ
     SubnetPublic1a:
         Type: AWS::EC2::Subnet
         Properties:
@@ -90,7 +90,7 @@ Resources:
             Tags:
             - Key: Name
               Value: SubnetPrivate1c
-    # ƒ‹[ƒgƒe[ƒuƒ‹‚ğƒTƒuƒlƒbƒg‚Éİ’è
+    # ãƒ«ãƒ¼ãƒˆãƒ†ãƒ¼ãƒ–ãƒ«ã‚’ã‚µãƒ–ãƒãƒƒãƒˆã«è¨­å®š
     myPublicARouteTableAssociation:
         Type: AWS::EC2::SubnetRouteTableAssociation
         Properties:
@@ -105,7 +105,7 @@ Resources:
               Ref: SubnetPublic1c
             RouteTableId:
               Ref: myRouteTable
-    # ƒZƒLƒ…ƒŠƒeƒBƒOƒ‹[ƒv‚Ìì¬
+    # ã‚»ã‚­ãƒ¥ãƒªãƒ†ã‚£ã‚°ãƒ«ãƒ¼ãƒ—ã®ä½œæˆ
     webSecurityGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
@@ -138,19 +138,19 @@ Resources:
             Tags:
             - Key: Name
               Value: web-SecurityGroup2
-    # EC2ƒCƒ“ƒXƒ^ƒ“ƒX‚Ìì¬
+    # EC2ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã®ä½œæˆ
     WebInstance01:
         Type: AWS::EC2::Instance
         Properties:
             ImageId: "ami-867b03e0"
-            # ƒVƒƒƒbƒgƒ_ƒEƒ“‚Ì“®ì
+            # ã‚·ãƒ£ãƒƒãƒˆãƒ€ã‚¦ãƒ³æ™‚ã®å‹•ä½œ
             InstanceInitiatedShutdownBehavior: stop
             AvailabilityZone: "ap-northeast-1a"
-            # ƒCƒ“ƒXƒ^ƒ“ƒXƒ^ƒCƒv
+            # ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚¿ã‚¤ãƒ—
             InstanceType: t2.micro
-            # ƒL[ƒyƒA
+            # ã‚­ãƒ¼ãƒšã‚¢
             KeyName: test-key
-            # Ú×ƒ‚ƒjƒ^ƒŠƒ“ƒOİ’è
+            # è©³ç´°ãƒ¢ãƒ‹ã‚¿ãƒªãƒ³ã‚°è¨­å®š
             Monitoring: false
             NetworkInterfaces:
              -  AssociatePublicIpAddress: true
@@ -159,7 +159,7 @@ Resources:
                   - Ref: webSecurityGroup
                 SubnetId:
                   Ref: SubnetPublic1a
-            # ƒ^ƒO
+            # ã‚¿ã‚°
             Tags:
             - Key: Name
               Value: Testweb01
