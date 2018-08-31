@@ -18,6 +18,6 @@ def lambda_handler(event, context):
     )
     message_dist = json.loads(response["events"][0]["message"])
 #   return str(message_dist["userIdentity"]["sessionContext"]["attributes"])
-    return str(os.environ.get("WEBHOOK"))
+#   return str(os.environ.get("WEBHOOK"))
     slack = slackweb.Slack(url=os.environ.get("WEBHOOK"))
     slack.notify(text=str(message_dist["userIdentity"]["sessionContext"]["attributes"])),  #通知内容
