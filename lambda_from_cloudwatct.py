@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import os
 import boto3
 import json
 import logging
@@ -15,8 +16,8 @@ def lambda_handler(event, context):
     logStreamName='211832652529_CloudTrail_ap-northeast-1',
     limit=1
     )
-
     message_dist = json.loads(response["events"][0]["message"])
-#    return str(message_dist["userIdentity"]["sessionContext"]["attributes"])
-    slack = slackweb.Slack(url="https://hooks.slack.com/services/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")
+#   return str(message_dist["userIdentity"]["sessionContext"]["attributes"])
+#    return str(os.environ.get("WEBHOOK"))
+    slack = slackweb.Slack(url=os.environ.get("WEBHOOK"))
     slack.notify(text=str(message_dist["userIdentity"]["sessionContext"]["attributes"])),  #通知内容
